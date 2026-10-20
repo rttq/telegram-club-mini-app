@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin · Mastermind</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg-black:#090909;--bg-orange:#FF7B1C;--bg-grey:#9A9590;--bg-light:#E8E5DF;
+      --text-black:#090909;--text-white:#E8E5DF;--text-grey:#9A9590;
+      --font-display:'Syne',sans-serif;--font-ui:'Inter',sans-serif;
+      --radius-lg:28px;--radius-md:16px;--radius-pill:999px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{background:var(--bg-black);min-height:100vh;font-family:var(--font-ui);color:var(--text-white)}
+    .screen{display:none}.screen.active{display:block}
+
+    /* Top nav */
+    .topnav{background:#0f0f0f;border-bottom:0.5px solid #1a1a1a;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:10}
+    .topnav-brand{font-family:var(--font-display);font-size:13px;font-weight:500;color:var(--bg-orange);white-space:nowrap}
+    .topnav-tabs{display:flex;gap:4px}
+    .topnav-tab{padding:6px 14px;border-radius:var(--radius-pill);font-size:13px;cursor:pointer;color:var(--text-grey);background:none;border:none;font-family:var(--font-ui);transition:background .15s,color .15s}
+    .topnav-tab.active{background:#1e1e1e;color:var(--text-white)}
+    .topnav-logout{font-size:12px;color:#333;cursor:pointer;background:none;border:none;font-family:var(--font-ui)}
+    .topnav-logout:hover{color:var(--text-grey)}
+
+    /* Login */
+    .login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh}
+    .login-card{background:#141414;border-radius:var(--radius-lg);padding:40px;width:100%;max-width:360px;border:0.5px solid #1a1a1a}
+    .login-title{font-family:var(--font-display);font-size:24px;font-weight:500;margin-bottom:6px}
+    .login-sub{font-size:13px;color:var(--text-grey);margin-bottom:28px}
+
+    /* Layout */
+    .container{max-width:820px;margin:0 auto;padding:32px 24px}
+
+    /* Form */
+    .lbl{font-size:11px;color:var(--text-grey);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;font-weight:500}
+    .input-dark{background:#0f0f0f;border:0.5px solid #1a1a1a;border-radius:10px;padding:10px 12px;font-size:13px;color:var(--text-white);width:100%;font-family:var(--font-ui);outline:none;margin-bottom:12px}
+    .input-dark::placeholder{color:#333}
+    .input-dark:focus{border-color:#2a2a2a}
+    select.input-dark{appearance:none;-webkit-appearance:none;cursor:pointer}
+    select.input-dark option{background:#141414}
+
+    /* Buttons */
+    .btn{padding:9px 18px;border-radius:var(--radius-pill);font-family:var(--font-display);font-size:13px;font-weight:600;cursor:pointer;border:none;letter-spacing:.02em;white-space:nowrap}
+    .btn-orange{background:var(--bg-orange);color:var(--text-black)}
+    .btn-ghost{background:#1e1e1e;color:var(--text-white)}
+    .btn-danger{background:#1e0f0f;color:#e05555}
+    .btn:disabled{opacity:.4;cursor:default}
+    .btn-full{width:100%;padding:12px}
+
+    /* Section */
+    .section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+    .section-title{font-family:var(--font-display);font-size:20px;font-weight:500}
+
+    /* Cards */
+    .card{background:#141414;border-radius:var(--radius-md);padding:16px;margin-bottom:8px;border:0.5px solid #1a1a1a}
+
+    /* Retreat rows */
+    .retreat-row{display:flex;align-items:center;gap:12px}
+    .retreat-info{flex:1;min-width:0}
+    .retreat-name{font-family:var(--font-display);font-size:15px;margin-bottom:4px}
+    .retreat-meta{font-size:11px;color:#444}
+    .retreat-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
+    .badge{font-size:10px;padding:3px 8px;border-radius:var(--radius-pill);font-weight:500}
+    .badge-on{background:rgba(255,123,28,.15);color:var(--bg-orange)}
+    .badge-off{background:#1a1a1a;color:#444}
+
+    /* Participant rows */
+    .p-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:0.5px solid #1a1a1a}
+    .p-row:last-child{border-bottom:none}
+    .p-avatar{width:34px;height:34px;border-radius:50%;background:#1e1e1e;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--text-grey);flex-shrink:0}
+    .p-info{flex:1;min-width:0}
+    .p-name{font-size:13px;font-weight:500}
+    .p-sub{font-size:11px;color:#444}
+
+    /* Add participant form */
+    .add-row{display:flex;gap:8px;align-items:flex-end}
+    .add-row .input-dark{margin-bottom:0}
+
+    /* Create retreat form */
+    .create-form{display:none;margin-bottom:16px}
+    .create-form.open{display:block}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+    /* Table */
+    .tbl{width:100%;border-collapse:collapse;font-size:12px}
+    .tbl th{text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#444;border-bottom:0.5px solid #1a1a1a}
+    .tbl td{padding:10px 12px;border-bottom:0.5px solid #111;vertical-align:middle}
+    .tbl tr:last-child td{border-bottom:none}
+    .tbl tr:hover td{background:#0d0d0d}
+    .tag-pill{font-size:10px;padding:2px 6px;background:#1a1a1a;border-radius:var(--radius-pill);margin:1px;display:inline-block}
+
+    /* Divider */
+    .divider{font-size:11px;color:#333;text-transform:uppercase;letter-spacing:.05em;padding:16px 0 8px}
+
+    /* Empty */
+    .empty{padding:20px;text-align:center;color:#333;font-size:13px}
+
+    /* Error */
+    .err-msg{font-size:12px;color:#e05555;margin-top:8px;display:none}
+  </style>
+</head>
+<body>
+
+<!-- ── Login ──────────────────────────────────────────────── -->
+<div class="screen active" id="login">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-title">Admin</div>
+      <div class="login-sub">Mastermind Retreat</div>
+      <div class="lbl">Пароль</div>
+      <input class="input-dark" id="login-token" type="password" placeholder="•••••"
+             onkeydown="if(event.key==='Enter')login()">
+      <button class="btn btn-orange btn-full" onclick="login()">Войти</button>
+      <div class="err-msg" id="login-error">Неверный пароль</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Top nav ─────────────────────────────────────────────── -->
+<div id="topnav" style="display:none">
+  <div class="topnav">
+    <div class="topnav-brand">Admin · Mastermind</div>
+    <div class="topnav-tabs">
+      <button class="topnav-tab active" data-screen="retreats" onclick="go('retreats')">Выезды</button>
+      <button class="topnav-tab" data-screen="roster"    onclick="go('roster')">Состав</button>
+      <button class="topnav-tab" data-screen="members"   onclick="goMembers()">Участники</button>
+      <button class="topnav-tab" data-screen="stats"     onclick="goStats()">Рейтинг</button>
+      <button class="topnav-tab" data-screen="votes"     onclick="goVotes()">Голоса</button>
+    </div>
+    <button class="topnav-logout" onclick="logout()">Выйти</button>
+  </div>
+</div>
+
+<!-- ── Retreats ────────────────────────────────────────────── -->
+<div class="screen" id="retreats">
+  <div class="container">
+    <div class="section-hdr">
+      <div class="section-title">Выезды</div>
+      <button class="btn btn-ghost" onclick="toggleCreate()">+ Создать</button>
+    </div>
+
+    <div class="card create-form" id="create-form">
+      <div class="form-grid" style="margin-bottom:12px">
+        <div>
+          <div class="lbl">Номер</div>
+          <input class="input-dark" id="cf-number" type="number" placeholder="9">
+        </div>
+        <div>
+          <div class="lbl">Название</div>
+          <input class="input-dark" id="cf-title" placeholder="Выезд #9">
+        </div>
+      </div>
+      <div class="form-grid" style="margin-bottom:16px">
+        <div>
+          <div class="lbl">Начало</div>
+          <input class="input-dark" id="cf-start" type="date">
+        </div>
+        <div>
+          <div class="lbl">Конец</div>
+          <input class="input-dark" id="cf-end" type="date">
+        </div>
+      </div>
+      <button class="btn btn-orange" onclick="createRetreat()">Создать</button>
+    </div>
+
+    <div id="retreats-list"></div>
+  </div>
+</div>
+
+<!-- ── Roster ──────────────────────────────────────────────── -->
+<div class="screen" id="roster">
+  <div class="container">
+    <div class="section-hdr">
+      <div class="section-title" id="roster-title">Состав выезда</div>
+    </div>
+
+    <div id="roster-no-retreat" class="empty" style="display:none">
+      Выбери выезд на вкладке «Выезды» → Состав →
+    </div>
+
+    <div id="roster-body" style="display:none">
+      <div class="card" style="margin-bottom:16px">
+        <div class="lbl" style="margin-bottom:10px">Добавить участника</div>
+        <div class="add-row">
+          <select class="input-dark" id="add-pid" style="flex:2">
+            <option value="">— участник —</option>
+          </select>
+          <select class="input-dark" id="add-role" style="flex:1">
+            <option value="разбираемый">Разбираемый</option>
+            <option value="зритель">Зритель</option>
+            <option value="гость">Гость</option>
+          </select>
+          <button class="btn btn-orange" onclick="addToRoster()">Добавить</button>
+        </div>
+      </div>
+
+      <div class="divider">Разбираемые</div>
+      <div class="card" id="roster-discussed"></div>
+      <div class="divider">Зрители</div>
+      <div class="card" id="roster-viewers"></div>
+      <div class="divider">Гости</div>
+      <div class="card" id="roster-guests"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Stats ───────────────────────────────────────────────── -->
+<div class="screen" id="stats">
+  <div class="container">
+    <div class="section-hdr">
+      <div class="section-title">Рейтинг кармы</div>
+      <select class="input-dark" id="stats-retreat" onchange="loadStats()" style="width:auto;margin-bottom:0">
+        <option value="">Все выезды</option>
+      </select>
+    </div>
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th style="width:36px">#</th>
+          <th>Участник</th>
+          <th>Инсайтов</th>
+          <th>Упоминаний</th>
+          <th style="width:160px"></th>
+        </tr>
+      </thead>
+      <tbody id="stats-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── Votes ────────────────────────────────────────────────── -->
+<div class="screen" id="votes">
+  <div class="container">
+    <div class="section-hdr">
+      <div class="section-title">Голоса</div>
+      <select class="input-dark" id="votes-retreat" onchange="loadVotes()" style="width:auto;margin-bottom:0">
+        <option value="">Все выезды</option>
+      </select>
+    </div>
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Кто голосовал</th>
+          <th>За кого</th>
+          <th>Инсайтов</th>
+          <th>Когда</th>
+        </tr>
+      </thead>
+      <tbody id="votes-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── Members ─────────────────────────────────────────────── -->
+<div class="screen" id="members">
+  <div class="container">
+    <div class="section-hdr">
+      <div class="section-title">Участники</div>
+      <div id="members-count" style="font-size:12px;color:#444"></div>
+    </div>
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Имя</th>
+          <th>Username</th>
+          <th>Компания</th>
+          <th>Роль</th>
+          <th>Теги</th>
+          <th>Статус</th>
+        </tr>
+      </thead>
+      <tbody id="members-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const API = '';
+
+const state = {
+  token: localStorage.getItem('admin_token') || '',
+  retreats: [],
+  allParticipants: [],
+  selectedRetreatId: null,
+};
+
+function adminFetch(url, opts = {}) {
+  return fetch(API + url, {
+    ...opts,
+    headers: {
+      'X-Admin-Token': state.token,
+      'Content-Type': 'application/json',
+      ...(opts.headers || {}),
+    },
+  });
+}
+
+// ── Auth ──────────────────────────────────────────────────────
+async function login() {
+  const token = document.getElementById('login-token').value.trim();
+  if (!token) return;
+
+  const res = await fetch(API + '/admin/participants', {
+    headers: { 'X-Admin-Token': token },
+  });
+
+  if (!res.ok) {
+    document.getElementById('login-error').style.display = 'block';
+    return;
+  }
+
+  state.token = token;
+  localStorage.setItem('admin_token', token);
+  state.allParticipants = await res.json();
+  document.getElementById('login-error').style.display = 'none';
+  boot();
+}
+
+function logout() {
+  localStorage.removeItem('admin_token');
+  state.token = '';
+  document.getElementById('topnav').style.display = 'none';
+  go('login');
+}
+
+// ── Navigation ────────────────────────────────────────────────
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.topnav-tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.screen === id)
+  );
+  window.scrollTo(0, 0);
+}
+
+function goMembers() {
+  renderMembers();
+  go('members');
+}
+
+// ── Boot ──────────────────────────────────────────────────────
+async function boot() {
+  document.getElementById('topnav').style.display = 'block';
+  fillParticipantSelect();
+  await loadRetreats();
+  go('retreats');
+}
+
+// ── Retreats ──────────────────────────────────────────────────
+async function loadRetreats() {
+  const res = await adminFetch('/admin/retreats');
+  state.retreats = await res.json();
+
+  // Auto-deactivate if active retreat has ended
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const ended = state.retreats.find(r => r.is_active && r.ends_at && new Date(r.ends_at) < today);
+  if (ended) {
+    await adminFetch(`/admin/retreats/${ended.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ is_active: false }),
+    });
+    const res2 = await adminFetch('/admin/retreats');
+    state.retreats = await res2.json();
+  }
+
+  renderRetreats();
+}
+
+function renderRetreats() {
+  const el = document.getElementById('retreats-list');
+  if (!state.retreats.length) {
+    el.innerHTML = '<div class="empty">Выездов пока нет</div>';
+    return;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const isPast = r => r.ends_at && new Date(r.ends_at) < today;
+
+  el.innerHTML = state.retreats.map(r => {
+    const dates = [r.starts_at, r.ends_at].filter(Boolean)
+      .map(d => d.slice(0, 10)).join(' — ');
+    const past = isPast(r);
+
+    let badge, actions;
+    const editBtn   = `<button class="btn btn-ghost" onclick="toggleEdit(${r.id})">Редактировать</button>`;
+    const deleteBtn = `<button class="btn btn-danger" onclick="deleteRetreat(${r.id}, '${h(r.title)}')">Удалить</button>`;
+    if (r.is_active) {
+      badge = '<span class="badge badge-on">активен</span>';
+      actions = `<button class="btn btn-ghost" onclick="deactivateRetreat(${r.id})">Деактивировать</button><button class="btn btn-ghost" onclick="openRoster(${r.id})">Состав →</button>${editBtn}${deleteBtn}`;
+    } else if (past) {
+      badge = '<span class="badge" style="background:#111;color:#333">завершён</span>';
+      actions = `<button class="btn btn-ghost" onclick="openRoster(${r.id})">Состав →</button>${editBtn}${deleteBtn}`;
+    } else {
+      badge = '<span class="badge badge-off">неактивен</span>';
+      actions = `<button class="btn btn-ghost" onclick="activateRetreat(${r.id})">Активировать</button><button class="btn btn-ghost" onclick="openRoster(${r.id})">Состав →</button>${editBtn}${deleteBtn}`;
+    }
+
+    const startVal = r.starts_at ? r.starts_at.slice(0,10) : '';
+    const endVal   = r.ends_at   ? r.ends_at.slice(0,10)   : '';
+
+    return `
+      <div class="card" style="${past ? 'opacity:.5' : ''}">
+        <div class="retreat-row">
+          <div class="retreat-info">
+            <div class="retreat-name">${r.number ? `#${r.number} · ` : ''}${h(r.title)}</div>
+            <div class="retreat-meta">${dates || 'Даты не заданы'}</div>
+          </div>
+          <div class="retreat-actions">${badge}${actions}</div>
+        </div>
+        <div id="edit-form-${r.id}" style="display:none;margin-top:14px;padding-top:14px;border-top:0.5px solid #1a1a1a">
+          <div class="form-grid" style="margin-bottom:12px">
+            <div><div class="lbl">Номер</div><input class="input-dark" id="ef-num-${r.id}" type="number" value="${r.number || ''}"></div>
+            <div><div class="lbl">Название</div><input class="input-dark" id="ef-title-${r.id}" value="${h(r.title)}"></div>
+          </div>
+          <div class="form-grid" style="margin-bottom:14px">
+            <div><div class="lbl">Начало</div><input class="input-dark" id="ef-start-${r.id}" type="date" value="${startVal}"></div>
+            <div><div class="lbl">Конец</div><input class="input-dark" id="ef-end-${r.id}" type="date" value="${endVal}"></div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-orange" onclick="saveEdit(${r.id})">Сохранить</button>
+            <button class="btn btn-ghost"  onclick="toggleEdit(${r.id})">Отмена</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleCreate() {
+  document.getElementById('create-form').classList.toggle('open');
+}
+
+async function createRetreat() {
+  const title = document.getElementById('cf-title').value.trim();
+  if (!title) { alert('Укажи название'); return; }
+
+  const res = await adminFetch('/admin/retreats', {
+    method: 'POST',
+    body: JSON.stringify({
+      number:    parseInt(document.getElementById('cf-number').value, 10) || null,
+      title,
+      starts_at: document.getElementById('cf-start').value || null,
+      ends_at:   document.getElementById('cf-end').value   || null,
+    }),
+  });
+  if (!res.ok) { alert('Ошибка создания'); return; }
+
+  document.getElementById('create-form').classList.remove('open');
+  ['cf-number','cf-title','cf-start','cf-end'].forEach(id =>
+    document.getElementById(id).value = ''
+  );
+  await loadRetreats();
+}
+
+async function deleteRetreat(id, title) {
+  if (!confirm(`Удалить выезд «${title}»? Это также удалит состав участников.`)) return;
+  const res = await adminFetch(`/admin/retreats/${id}`, { method: 'DELETE' });
+  if (!res.ok) { alert('Ошибка удаления'); return; }
+  await loadRetreats();
+}
+
+async function activateRetreat(id) {
+  const res = await adminFetch(`/admin/retreats/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ is_active: true }),
+  });
+  if (!res.ok) { alert('Ошибка активации'); return; }
+  await loadRetreats();
+}
+
+async function deactivateRetreat(id) {
+  const res = await adminFetch(`/admin/retreats/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ is_active: false }),
+  });
+  if (!res.ok) { alert('Ошибка деактивации'); return; }
+  await loadRetreats();
+}
+
+function toggleEdit(id) {
+  const form = document.getElementById(`edit-form-${id}`);
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+async function saveEdit(id) {
+  const title = document.getElementById(`ef-title-${id}`).value.trim();
+  if (!title) { alert('Укажи название'); return; }
+  const res = await adminFetch(`/admin/retreats/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      number:    parseInt(document.getElementById(`ef-num-${id}`).value, 10) || null,
+      title,
+      starts_at: document.getElementById(`ef-start-${id}`).value || null,
+      ends_at:   document.getElementById(`ef-end-${id}`).value   || null,
+    }),
+  });
+  if (!res.ok) { alert('Ошибка сохранения'); return; }
+  await loadRetreats();
+}
+
+// ── Roster ────────────────────────────────────────────────────
+async function openRoster(retreatId) {
+  state.selectedRetreatId = retreatId;
+  const r = state.retreats.find(x => x.id === retreatId);
+  document.getElementById('roster-title').textContent =
+    `Состав · ${r ? (r.number ? `#${r.number} ` : '') + r.title : retreatId}`;
+  document.getElementById('roster-no-retreat').style.display = 'none';
+  document.getElementById('roster-body').style.display = 'block';
+  await loadRoster();
+  go('roster');
+}
+
+async function loadRoster() {
+  const res = await fetch(API + `/retreats/${state.selectedRetreatId}/participants`);
+  const data = await res.json();
+  renderRosterSection('roster-discussed', data.discussed || []);
+  renderRosterSection('roster-viewers',   data.viewers   || []);
+  renderRosterSection('roster-guests',    data.guests    || []);
+}
+
+function renderRosterSection(elId, people) {
+  const el = document.getElementById(elId);
+  if (!people.length) { el.innerHTML = '<div class="empty">Никого нет</div>'; return; }
+  el.innerHTML = people.map(p => `
+    <div class="p-row">
+      <div class="p-avatar">${h(p.initials || '?')}</div>
+      <div class="p-info">
+        <div class="p-name">${h(p.full_name)}</div>
+        <div class="p-sub">${h(p.role_in_retreat || '')}</div>
+      </div>
+      <button class="btn btn-danger" onclick="removeFromRoster(${p.id})">Убрать</button>
+    </div>`).join('');
+}
+
+function fillParticipantSelect() {
+  const sel = document.getElementById('add-pid');
+  sel.innerHTML = '<option value="">— участник —</option>' +
+    state.allParticipants.map(p =>
+      `<option value="${p.id}">${h(p.full_name)}</option>`
+    ).join('');
+}
+
+async function addToRoster() {
+  const pid  = parseInt(document.getElementById('add-pid').value, 10);
+  const role = document.getElementById('add-role').value;
+  if (!pid) { alert('Выбери участника'); return; }
+
+  const res = await adminFetch(`/admin/retreats/${state.selectedRetreatId}/participants`, {
+    method: 'POST',
+    body: JSON.stringify({ participant_id: pid, role_in_retreat: role }),
+  });
+  if (!res.ok) { alert('Ошибка добавления'); return; }
+  await loadRoster();
+}
+
+async function removeFromRoster(pid) {
+  const res = await adminFetch(
+    `/admin/retreats/${state.selectedRetreatId}/participants/${pid}`,
+    { method: 'DELETE' }
+  );
+  if (!res.ok) { alert('Ошибка удаления'); return; }
+  await loadRoster();
+}
+
+// ── Stats ─────────────────────────────────────────────────────
+function goStats() {
+  fillStatsSelect();
+  loadStats();
+  go('stats');
+}
+
+function fillStatsSelect() {
+  const sel = document.getElementById('stats-retreat');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Все выезды</option>' +
+    state.retreats.map(r =>
+      `<option value="${r.id}">${r.number ? `#${r.number} · ` : ''}${h(r.title)}</option>`
+    ).join('');
+  sel.value = current;
+}
+
+async function loadStats() {
+  const retreatId = document.getElementById('stats-retreat').value;
+  const url = retreatId ? `/admin/stats?retreat_id=${retreatId}` : '/admin/stats';
+  const res = await adminFetch(url);
+  const rows = await res.json();
+  renderStats(rows);
+}
+
+function renderStats(rows) {
+  const tbody = document.getElementById('stats-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty">Нет данных</td></tr>';
+    return;
+  }
+  const max = rows[0].total_insights || 1;
+  tbody.innerHTML = rows.map((r, i) => {
+    const pct = Math.round((r.total_insights / max) * 100);
+    return `
+      <tr>
+        <td style="color:#444;font-size:11px">${i + 1}</td>
+        <td><b>${h(r.person_name)}</b></td>
+        <td style="font-family:var(--font-display);font-size:16px;color:var(--bg-orange)">${r.total_insights}</td>
+        <td style="color:#444">${r.times_mentioned}×</td>
+        <td>
+          <div style="background:#1a1a1a;border-radius:999px;height:4px;overflow:hidden">
+            <div style="background:var(--bg-orange);height:100%;width:${pct}%;border-radius:999px"></div>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+// ── Votes ─────────────────────────────────────────────────────
+function goVotes() {
+  fillVotesSelect();
+  loadVotes();
+  go('votes');
+}
+
+function fillVotesSelect() {
+  const sel = document.getElementById('votes-retreat');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Все выезды</option>' +
+    state.retreats.map(r =>
+      `<option value="${r.id}">${r.number ? `#${r.number} · ` : ''}${h(r.title)}</option>`
+    ).join('');
+  sel.value = current;
+}
+
+async function loadVotes() {
+  const retreatId = document.getElementById('votes-retreat').value;
+  const url = retreatId ? `/admin/votes?retreat_id=${retreatId}` : '/admin/votes';
+  const res = await adminFetch(url);
+  const rows = await res.json();
+  renderVotes(rows);
+}
+
+function renderVotes(rows) {
+  const tbody = document.getElementById('votes-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="empty">Нет данных</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => {
+    const who = r.first_name || r.username ? `${r.first_name || ''} ${r.username ? '@'+r.username : ''}`.trim() : '—';
+    const when = r.created_at ? new Date(r.created_at).toLocaleString('ru', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+    const selfBadge = r.is_self ? `<span style="font-size:9px;padding:2px 6px;background:rgba(224,85,85,0.15);color:#e05555;border-radius:999px;margin-left:6px">себе</span>` : '';
+    return `
+      <tr style="${r.is_self ? 'opacity:.6' : ''}">
+        <td>${h(who)}</td>
+        <td><b>${h(r.person_name)}</b>${selfBadge}</td>
+        <td style="color:${r.is_self ? '#e05555' : 'var(--bg-orange)'};font-family:var(--font-display)">${r.insights}</td>
+        <td style="color:#444;font-size:11px">${when}</td>
+      </tr>`;
+  }).join('');
+}
+
+// ── Members ───────────────────────────────────────────────────
+function renderMembers() {
+  document.getElementById('members-count').textContent = `${state.allParticipants.length} чел.`;
+  const tbody = document.getElementById('members-tbody');
+  if (!state.allParticipants.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">Нет участников</td></tr>';
+    return;
+  }
+  tbody.innerHTML = state.allParticipants.map(p => `
+    <tr>
+      <td><b>${h(p.full_name)}</b></td>
+      <td style="color:#444">@${h(p.telegram_username || '—')}</td>
+      <td>${h(p.company || '—')}</td>
+      <td>${h(p.role || '—')}</td>
+      <td>${(p.tags || []).map(t => `<span class="tag-pill">${h(t)}</span>`).join('')}</td>
+      <td style="font-size:11px">${p.is_draft
+        ? '<span style="color:var(--bg-orange)">черновик</span>'
+        : '<span style="color:#444">сохранён</span>'}</td>
+    </tr>`).join('');
+}
+
+// ── Utils ─────────────────────────────────────────────────────
+function h(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Auto-login if token in localStorage ──────────────────────
+if (state.token) {
+  adminFetch('/admin/participants').then(async res => {
+    if (res.ok) {
+      state.allParticipants = await res.json();
+      boot();
+    } else {
+      localStorage.removeItem('admin_token');
+      state.token = '';
+    }
+  });
+}
+
+// Show "select retreat first" if roster tab clicked with no selection
+document.querySelector('[data-screen="roster"]').addEventListener('click', () => {
+  if (!state.selectedRetreatId) {
+    document.getElementById('roster-no-retreat').style.display = 'block';
+    document.getElementById('roster-body').style.display = 'none';
+  }
+});
+</script>
+</body>
+</html>

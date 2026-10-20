@@ -1,0 +1,576 @@
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+  --bg-black:#090909;--bg-orange:#FF7B1C;--bg-grey:#9A9590;--bg-light:#E8E5DF;
+  --text-black:#090909;--text-white:#E8E5DF;--text-grey:#9A9590;
+  --font-display:'Syne',sans-serif;--font-ui:'Inter',sans-serif;
+  --radius-lg:28px;--radius-md:16px;--radius-pill:999px;
+  --spacing-xs:4px;--spacing-sm:8px;--spacing-md:16px;--spacing-lg:24px;--spacing-xl:40px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg-black);min-height:100vh;font-family:var(--font-ui);color:var(--text-white)}
+.screen{display:none}.screen.active{display:block}
+.phone{background:var(--bg-black);padding:32px 20px 48px;max-width:420px;margin:0 auto;min-height:100vh;font-family:var(--font-ui);color:var(--text-white)}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--spacing-xl)}
+.hdr-title{font-family:var(--font-display);font-size:18px;font-weight:500;line-height:1.1;letter-spacing:-0.02em;color:var(--text-white)}
+.burger{width:28px;height:20px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;padding:2px 0}
+.burger span{display:block;height:2px;background:var(--text-white);border-radius:2px}
+.drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:99;display:none}
+.drawer-backdrop.open{display:block}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:260px;background:#141414;padding:28px 24px;transform:translateX(100%);transition:transform .25s ease;z-index:100;border-left:0.5px solid #222}
+.drawer.open{transform:translateX(0)}
+.drawer-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--spacing-xl)}
+.drawer-title{font-family:var(--font-display);font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-grey)}
+.drawer-close{font-size:22px;color:var(--text-white);cursor:pointer;line-height:1}
+.drawer-item{font-family:var(--font-display);font-size:22px;font-weight:500;color:var(--text-white);padding:14px 0;border-bottom:1px solid rgba(154,149,144,0.15);cursor:pointer;letter-spacing:-0.01em}
+.drawer-item:last-child{border-bottom:none}
+.drawer-item:hover{color:var(--bg-orange)}
+.section-title{font-family:var(--font-ui);font-size:13px;color:var(--text-grey);margin-bottom:var(--spacing-sm);font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.row-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(154,149,144,0.2)}
+.row-item:last-child{border-bottom:none}
+.avatar{width:34px;height:34px;border-radius:50%;background:#1e1e1e;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--text-grey);flex-shrink:0}
+.uname{font-size:13px;color:var(--text-white);font-weight:500}
+.usub{font-size:11px;color:#444}
+.counter{display:flex;align-items:center;gap:8px}
+.cnt-btn{width:26px;height:26px;border:0.5px solid #2a2a2a;border-radius:6px;background:#141414;color:var(--text-white);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none}
+.cnt-val{font-family:var(--font-display);font-size:14px;font-weight:500;color:var(--text-white);min-width:16px;text-align:center}
+.btn-primary{flex:1;background:var(--bg-orange);color:var(--text-black);border:none;border-radius:var(--radius-pill);padding:14px;font-family:var(--font-display);font-size:15px;font-weight:600;text-transform:uppercase;letter-spacing:.02em;cursor:pointer;width:100%}
+.btn-primary:disabled{opacity:.4;cursor:default}
+.tag-o{font-size:10px;padding:3px 8px;background:rgba(255,123,28,0.12);color:var(--bg-orange);border-radius:var(--radius-pill);display:inline-block;margin:2px 2px 0 0;font-family:var(--font-ui)}
+.profile-card{background:#141414;border-radius:var(--radius-md);padding:14px;margin-bottom:8px}
+.lbl{font-size:11px;color:var(--text-grey);margin-bottom:4px;font-family:var(--font-ui)}
+.input-dark{background:#141414;border:0.5px solid #222;border-radius:12px;padding:10px 12px;font-size:13px;color:#555;margin-bottom:10px;width:100%;font-family:var(--font-ui)}
+.input-dark.filled{color:var(--text-white)}
+input.input-dark,textarea.input-dark,select.input-dark{color:var(--text-white);outline:none;font:inherit;font-size:13px}
+input.input-dark::placeholder,textarea.input-dark::placeholder{color:#555}
+textarea.input-dark{resize:vertical;min-height:52px}
+select.input-dark{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,#9A9590 50%),linear-gradient(135deg,#9A9590 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:36px}
+select.input-dark option{background:#141414;color:var(--text-white)}
+.draft-banner{background:rgba(255,123,28,0.12);color:var(--bg-orange);border:0.5px solid rgba(255,123,28,0.3);border-radius:var(--radius-md);padding:10px 12px;font-size:11px;margin-bottom:var(--spacing-md);text-align:center}
+.score-card{background:var(--bg-orange);color:var(--text-black);border-radius:var(--radius-lg);padding:var(--spacing-lg);margin-bottom:var(--spacing-xl)}
+.score-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--spacing-sm)}
+.score-lbl{font-family:var(--font-ui);font-size:14px;font-weight:500}
+.badge-pill{font-size:10px;padding:3px 8px;border-radius:var(--radius-pill);font-weight:500;font-family:var(--font-ui)}
+.badge-on{background:rgba(255,123,28,0.15);color:var(--bg-orange)}
+.badge-off{background:#1a1a1a;color:#444}
+.lock-circle{width:48px;height:48px;border-radius:50%;background:#141414;border:0.5px solid #222;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+
+.menu-tile{border-radius:var(--radius-lg);padding:var(--spacing-lg);margin-bottom:12px;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;min-height:140px}
+.menu-tile.orange{background:var(--bg-orange);color:var(--text-black)}
+.menu-tile.light{background:var(--bg-light);color:var(--text-black)}
+.menu-tile.grey{background:var(--bg-grey);color:var(--text-black)}
+.menu-tile-title{font-family:var(--font-display);font-size:28px;font-weight:500;line-height:1;letter-spacing:-0.02em}
+.menu-tile-sub{font-size:12px;opacity:.6;margin-top:8px}
+.menu-tile-arrow{font-family:var(--font-display);font-size:22px;align-self:flex-end;margin-top:12px}
+
+.retreat-row{display:flex;align-items:center;gap:12px;background:#141414;border-radius:var(--radius-md);padding:14px;margin-bottom:8px;cursor:pointer}
+.retreat-row.disabled{cursor:default;opacity:.55}
+.retreat-info{flex:1;min-width:0}
+.retreat-title{font-family:var(--font-display);font-size:15px;color:var(--text-white);margin-bottom:4px}
+.retreat-meta{font-size:11px;color:#444}
+.retreat-arrow{font-family:var(--font-display);font-size:18px;color:var(--bg-orange)}
+
+.empty-state{padding:24px 16px;text-align:center;color:#555;font-size:13px;background:#141414;border-radius:var(--radius-md);border:0.5px dashed #222}
+
+#profiles .peers-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+#profiles .peer-tile{background:var(--bg-light);border-radius:var(--radius-md);padding:12px;aspect-ratio:1/1;display:flex;flex-direction:column;justify-content:flex-end;cursor:pointer;position:relative}
+#profiles .peer-tile.dark{background:var(--bg-grey)}
+#profiles .peer-tile-name{font-family:var(--font-display);font-size:16px;font-weight:500;line-height:1.1;color:var(--text-black);margin-bottom:7px}
+#profiles .tag-dark{font-size:9px;padding:2px 7px;background:rgba(9,9,9,0.12);color:rgba(9,9,9,0.6);border-radius:var(--radius-pill);display:inline-block;margin:1px 1px 0 0;font-family:var(--font-ui)}
+#profiles .avatar{width:40px;height:40px}
+
+.profile-hero{background:var(--bg-light);border-radius:var(--radius-lg);padding:var(--spacing-lg);margin-bottom:var(--spacing-lg);display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+.profile-hero-avatar{width:64px;height:64px;border-radius:50%;background:var(--bg-black);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:22px;font-weight:500;color:var(--text-white)}
+.profile-hero-name{font-family:var(--font-display);font-size:24px;font-weight:500;color:var(--text-black);line-height:1.1;letter-spacing:-0.02em}
+.profile-hero-sub{font-size:12px;color:rgba(9,9,9,0.5);margin-top:2px}
+.profile-section{margin-bottom:var(--spacing-lg)}
+.profile-section-lbl{font-size:11px;color:var(--text-grey);text-transform:uppercase;letter-spacing:.04em;font-weight:500;margin-bottom:6px}
+.profile-section-val{font-size:14px;color:var(--text-white);line-height:1.5}
+.back-btn{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-grey);cursor:pointer;background:none;border:none;font-family:var(--font-ui);padding:0;margin-bottom:4px}
+.back-btn:hover{color:var(--text-white)}
+</style>
+
+<div class="screen active" id="about">
+  <div class="phone">
+    <div class="hdr">
+      <div class="hdr-title">О себе</div>
+      <div class="burger" onclick="openDrawer()"><span></span><span></span><span></span></div>
+    </div>
+    <div class="score-card" style="margin-bottom:var(--spacing-lg)">
+      <div class="score-hdr"><span class="score-lbl">Твой профиль</span></div>
+      <div style="font-family:var(--font-display);font-size:28px;font-weight:500;color:var(--text-black);margin:8px 0 4px;line-height:1">Расскажи о себе</div>
+      <div style="font-size:12px;color:rgba(9,9,9,0.5)">Это увидят другие участники</div>
+    </div>
+    <div id="me-draft-banner" class="draft-banner" style="display:none">Черновик от админа · проверь и сохрани</div>
+    <div class="lbl">Имя</div>
+    <input class="input-dark" id="me-name" type="text" placeholder="—">
+    <div class="lbl">Компания</div>
+    <input class="input-dark" id="me-company" type="text" placeholder="—">
+    <div class="lbl">С чем могу помочь</div>
+    <textarea class="input-dark" id="me-help" placeholder="—"></textarea>
+    <div class="lbl">Сильные стороны</div>
+    <textarea class="input-dark" id="me-strengths" placeholder="—"></textarea>
+    <div class="lbl">Теги <span style="color:#444;font-size:10px">через запятую</span></div>
+    <input class="input-dark" id="me-tags" type="text" placeholder="стартапы, продукт, B2B">
+    <div style="margin-top:8px"><button class="btn-primary" id="me-save" onclick="saveMe()">Сохранить</button></div>
+  </div>
+</div>
+
+<div class="screen" id="main-menu">
+  <div class="phone">
+    <div class="hdr">
+      <div class="hdr-title">Mastermind<br>Retreat</div>
+      <div class="burger" onclick="openDrawer()"><span></span><span></span><span></span></div>
+    </div>
+    <div class="section-title">Главное меню</div>
+    <div class="menu-tile orange" onclick="go('karma-list')">
+      <div>
+        <div class="menu-tile-title">Карма</div>
+        <div class="menu-tile-sub">Выезды и благодарности</div>
+      </div>
+      <div class="menu-tile-arrow">→</div>
+    </div>
+    <div class="menu-tile light" onclick="go('profiles')">
+      <div>
+        <div class="menu-tile-title">Профили</div>
+        <div class="menu-tile-sub">Участники и их экспертиза</div>
+      </div>
+      <div class="menu-tile-arrow">→</div>
+    </div>
+    <div class="menu-tile grey" onclick="go('about')">
+      <div>
+        <div class="menu-tile-title">О себе</div>
+        <div class="menu-tile-sub">Твой профиль и экспертиза</div>
+      </div>
+      <div class="menu-tile-arrow">→</div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="karma-list">
+  <div class="phone">
+    <div class="hdr">
+      <div class="hdr-title">Карма<br>Выезды</div>
+      <div class="burger" onclick="openDrawer()"><span></span><span></span><span></span></div>
+    </div>
+    <div id="retreats-container"></div>
+  </div>
+</div>
+
+<div class="screen" id="karma">
+  <div class="phone">
+    <div class="hdr">
+      <div class="hdr-title">Mastermind<br>Retreat</div>
+      <div class="burger" onclick="openDrawer()"><span></span><span></span><span></span></div>
+    </div>
+    <div id="karma-content"></div>
+    <button class="btn-primary" id="send-btn" onclick="submitVotes()" disabled>Отправить благодарность (0)</button>
+  </div>
+</div>
+
+<div class="screen" id="profiles">
+  <div class="phone">
+    <div class="hdr">
+      <div class="hdr-title">Mastermind<br>Retreat</div>
+      <div class="burger" onclick="openDrawer()"><span></span><span></span><span></span></div>
+    </div>
+    <div id="profiles-content"></div>
+  </div>
+</div>
+
+<div class="screen" id="profile-detail">
+  <div class="phone">
+    <div class="hdr">
+      <button class="back-btn" onclick="go('profiles')">← Профили</button>
+      <div class="burger" onclick="openDrawer()"><span></span><span></span><span></span></div>
+    </div>
+    <div id="profile-detail-content"></div>
+  </div>
+</div>
+
+<div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-hdr">
+    <div class="drawer-title">Меню</div>
+    <div class="drawer-close" onclick="closeDrawer()">×</div>
+  </div>
+  <div class="drawer-item" onclick="nav('karma-list')">Карма</div>
+  <div class="drawer-item" onclick="nav('profiles')">Профили</div>
+  <div class="drawer-item" onclick="nav('about')">О себе</div>
+</div>
+
+<script>
+const tg = window.Telegram && window.Telegram.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+function tgHeaders(extra){
+  const h = Object.assign({}, extra || {});
+  if (tg && tg.initData) h['X-Telegram-Init-Data'] = tg.initData;
+  return h;
+}
+
+const state = {
+  retreats: { active: null, past: [], upcoming: null },
+  activeRetreatId: null,
+  openedRetreatId: null,
+  participants: { discussed: [], viewers: [], guests: [] },
+  peers: [],
+  recentlyViewed: null,
+  me: null,
+  votes: {}
+};
+
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function openDrawer(){
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawer-backdrop').classList.add('open');
+}
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawer-backdrop').classList.remove('open');
+}
+function nav(id){closeDrawer();go(id);}
+
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+const MONTHS_SHORT = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+function formatDateRange(start, end){
+  if (!start || !end) return '';
+  const s = new Date(start), e = new Date(end);
+  const sM = MONTHS_SHORT[s.getMonth()], eM = MONTHS_SHORT[e.getMonth()];
+  if (sM === eM && s.getFullYear() === e.getFullYear()) return `${s.getDate()}–${e.getDate()} ${sM}`;
+  return `${s.getDate()} ${sM} – ${e.getDate()} ${eM}`;
+}
+function formatRetreat(r, status){
+  const title = r.title || (r.number ? `Выезд #${r.number}` : 'Выезд');
+  let meta = '';
+  if (status === 'active')   meta = (formatDateRange(r.starts_at, r.ends_at) + ' · идёт сейчас').trim();
+  else if (status === 'past') meta = formatDateRange(r.starts_at, r.ends_at);
+  else                        meta = 'Откроется ближе к дате';
+  return { id: r.id, title, meta };
+}
+
+async function loadRetreats(){
+  const c = document.getElementById('retreats-container');
+  c.innerHTML = `<div class="empty-state">Загрузка…</div>`;
+  try {
+    const res = await fetch('/retreats');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    state.activeRetreatId = data.active ? data.active.id : null;
+    state.retreats = {
+      active:   data.active   ? formatRetreat(data.active,   'active')   : null,
+      past:     (data.past || []).map(r => formatRetreat(r, 'past')),
+      upcoming: data.upcoming ? formatRetreat(data.upcoming, 'upcoming') : null,
+    };
+    renderRetreats();
+  } catch (err) {
+    console.error('loadRetreats failed', err);
+    c.innerHTML = `<div class="empty-state">Не удалось загрузить выезды</div>`;
+  }
+}
+
+function renderRetreats(){
+  const c = document.getElementById('retreats-container');
+  const { active, past, upcoming } = state.retreats;
+  let html = '';
+  html += `<div class="section-title">Активный выезд</div>`;
+  if(active){
+    html += `<div class="retreat-row" onclick="openRetreat(${active.id})">
+      <div class="retreat-info">
+        <div class="retreat-title">${escapeHtml(active.title)}</div>
+        <div class="retreat-meta">${escapeHtml(active.meta)}</div>
+      </div>
+      <span class="badge-pill badge-on">активен</span>
+      <div class="retreat-arrow">→</div>
+    </div>`;
+  } else {
+    html += `<div class="empty-state">Сейчас нет активного выезда</div>`;
+  }
+  html += `<div class="section-title" style="margin-top:20px">Прошедшие</div>`;
+  if(past.length){
+    html += past.map(r=>`<div class="retreat-row disabled">
+      <div class="retreat-info">
+        <div class="retreat-title">${escapeHtml(r.title)}</div>
+        <div class="retreat-meta">${escapeHtml(r.meta)}</div>
+      </div>
+      <span class="badge-pill badge-off">завершён</span>
+    </div>`).join('');
+  } else {
+    html += `<div class="empty-state">Завершённых выездов пока нет</div>`;
+  }
+  if(upcoming){
+    html += `<div class="section-title" style="margin-top:20px">Следующий</div>
+    <div class="retreat-row disabled">
+      <div class="lock-circle">🔒</div>
+      <div class="retreat-info">
+        <div class="retreat-title">${escapeHtml(upcoming.title)}</div>
+        <div class="retreat-meta">${escapeHtml(upcoming.meta)}</div>
+      </div>
+    </div>`;
+  }
+  c.innerHTML = html;
+}
+
+async function openRetreat(retreatId){
+  state.openedRetreatId = retreatId;
+  state.votes = {};
+  go('karma');
+  await loadKarmaParticipants(retreatId);
+}
+
+async function loadKarmaParticipants(retreatId){
+  const c = document.getElementById('karma-content');
+  c.innerHTML = `<div class="empty-state">Загрузка…</div>`;
+  document.getElementById('send-btn').disabled = true;
+  try {
+    const res = await fetch('/retreats/' + retreatId + '/participants');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    state.participants = {
+      discussed: data.discussed || [],
+      viewers:   data.viewers   || [],
+      guests:    data.guests    || [],
+    };
+    renderKarma();
+  } catch (err) {
+    console.error('loadKarmaParticipants failed', err);
+    c.innerHTML = `<div class="empty-state">Не удалось загрузить участников</div>`;
+  }
+}
+
+function renderKarma(){
+  const c = document.getElementById('karma-content');
+  const { discussed, viewers, guests } = state.participants;
+  if(!discussed.length && !viewers.length && !guests.length){
+    c.innerHTML = `<div class="empty-state">Список участников появится с началом выезда</div>`;
+    document.getElementById('send-btn').disabled = true;
+    document.getElementById('send-btn').textContent = 'Отправить благодарность (0)';
+    return;
+  }
+  const row = p => `<div class="row-item">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="avatar">${escapeHtml(p.initials)}</div>
+      <div><div class="uname">${escapeHtml(p.full_name)}</div></div>
+    </div>
+    <div class="counter">
+      <div class="cnt-btn" onclick="change(${p.id},false)">−</div>
+      <div class="cnt-val" id="cnt-${p.id}">${state.votes[p.id]||0}</div>
+      <div class="cnt-btn" onclick="change(${p.id},true)">+</div>
+    </div>
+  </div>`;
+  let html = '';
+  if(discussed.length){
+    html += `<div class="section-title">Разбираемые</div>
+      <div style="margin-bottom:20px">${discussed.map(row).join('')}</div>`;
+  }
+  if(viewers.length){
+    html += `<div class="section-title">Зрители</div>
+      <div style="margin-bottom:20px">${viewers.map(row).join('')}</div>`;
+  }
+  if(guests.length){
+    html += `<div class="section-title">Гости</div>
+      <div style="margin-bottom:24px">${guests.map(row).join('')}</div>`;
+  }
+  c.innerHTML = html;
+  updateSendBtn();
+}
+
+function openProfile(id){
+  const p = state.peers.find(x => x.id === id);
+  if (!p) return;
+  state.recentlyViewed = p;
+
+  const tags = (p.tags||[]).map(t=>`<span class="tag-o">${escapeHtml(t)}</span>`).join('');
+
+  document.getElementById('profile-detail-content').innerHTML = `
+    <div class="profile-hero">
+      <div class="profile-hero-avatar">${escapeHtml(p.initials||'?')}</div>
+      <div>
+        <div class="profile-hero-name">${escapeHtml(p.full_name)}</div>
+        <div class="profile-hero-sub">${escapeHtml(p.company || '')}</div>
+      ${p.telegram_username ? `<a href="https://t.me/${escapeHtml(p.telegram_username)}" target="_blank" style="font-size:12px;color:var(--bg-orange);text-decoration:none">@${escapeHtml(p.telegram_username)}</a>` : ''}
+      </div>
+    </div>
+    ${p.help_with ? `<div class="profile-section">
+      <div class="profile-section-lbl">С чем могу помочь</div>
+      <div class="profile-section-val">${escapeHtml(p.help_with)}</div>
+    </div>` : ''}
+    ${p.strengths ? `<div class="profile-section">
+      <div class="profile-section-lbl">Сильные стороны</div>
+      <div class="profile-section-val">${escapeHtml(p.strengths)}</div>
+    </div>` : ''}
+    ${tags ? `<div class="profile-section">
+      <div class="profile-section-lbl">Теги</div>
+      <div>${tags}</div>
+    </div>` : ''}`;
+
+  go('profile-detail');
+}
+
+async function loadProfiles(){
+  const c = document.getElementById('profiles-content');
+  c.innerHTML = `<div class="empty-state">Загрузка…</div>`;
+  try {
+    const res = await fetch('/participants');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    state.peers = await res.json();
+    renderProfiles();
+  } catch (err) {
+    console.error('loadProfiles failed', err);
+    c.innerHTML = `<div class="empty-state">Не удалось загрузить участников</div>`;
+  }
+}
+
+function renderProfiles(){
+  const c = document.getElementById('profiles-content');
+  let html = '';
+  if(state.recentlyViewed){
+    const r = state.recentlyViewed;
+    html += `<div class="section-title" style="margin-bottom:10px">Недавно просмотрено</div>
+    <div class="profile-card" style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div class="avatar">${escapeHtml(r.initials)}</div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--text-white);font-family:var(--font-display)">${escapeHtml(r.full_name)}</div>
+          <div style="font-size:11px;color:#444">${escapeHtml(r.company||'')}${r.role?' · '+escapeHtml(r.role):''}</div>
+        </div>
+      </div>
+      ${r.help_with?`<div class="lbl">С чем помогу</div><div style="font-size:13px;color:var(--text-grey);margin-bottom:8px">${escapeHtml(r.help_with)}</div>`:''}
+      ${(r.tags||[]).length?`<div>${r.tags.map(t=>`<span class="tag-o">${escapeHtml(t)}</span>`).join('')}</div>`:''}
+    </div>`;
+  }
+  html += `<div class="section-title">Все участники</div>`;
+  if(state.peers.length){
+    html += `<div class="peers-grid">${state.peers.map((p,i)=>`
+      <div class="peer-tile${i%3===2?' dark':''}" onclick="openProfile(${p.id})">
+        <div class="peer-tile-name">${escapeHtml(p.full_name).replace(' ','<br>')}</div>
+        <div>${(p.tags||[]).map(t=>`<span class="tag-dark">${escapeHtml(t)}</span>`).join('')}</div>
+      </div>`).join('')}</div>`;
+  } else {
+    html += `<div class="empty-state">Участники появятся, когда профили будут заполнены</div>`;
+  }
+  c.innerHTML = html;
+}
+
+async function loadMe(){
+  try {
+    const res = await fetch('/me', { headers: tgHeaders() });
+    if (!res.ok) return;
+    const me = await res.json();
+    if (!me) return;
+    state.me = me;
+    if (me.is_draft === false) go('main-menu');
+    document.getElementById('me-name').value     = me.full_name || '';
+    document.getElementById('me-company').value  = me.company   || '';
+    document.getElementById('me-help').value     = me.help_with || '';
+    document.getElementById('me-strengths').value= me.strengths || '';
+    document.getElementById('me-tags').value      = (me.tags || []).join(', ');
+    document.getElementById('me-draft-banner').style.display = me.is_draft ? 'block' : 'none';
+  } catch (err) { console.error('loadMe failed', err); }
+}
+
+async function saveMe(){
+  const btn = document.getElementById('me-save');
+  const body = {
+    full_name: document.getElementById('me-name').value.trim(),
+    company:   document.getElementById('me-company').value.trim(),
+    help_with: document.getElementById('me-help').value.trim(),
+    strengths: document.getElementById('me-strengths').value.trim(),
+    tags: document.getElementById('me-tags').value.split(',').map(t=>t.trim()).filter(Boolean)
+  };
+  if (!body.full_name) { alert('Укажи имя'); return; }
+  if (!tg || !tg.initData) { alert('Профиль можно сохранить только из Telegram'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Сохраняем…';
+  try {
+    const res = await fetch('/me', {
+      method: 'PUT',
+      headers: tgHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    state.me = await res.json();
+    document.getElementById('me-draft-banner').style.display = 'none';
+    loadProfiles();
+    go('main-menu');
+  } catch (err) {
+    console.error('saveMe failed', err);
+    alert('Не удалось сохранить');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Сохранить';
+  }
+}
+
+async function submitVotes(){
+  const retreatId = state.openedRetreatId;
+  if (!retreatId) { alert('Нет активного выезда'); return; }
+  const all = [...state.participants.discussed, ...state.participants.viewers, ...state.participants.guests];
+  const answers = all
+    .filter(p => (state.votes[p.id] || 0) > 0)
+    .map(p => ({ person_id: p.id, person_name: p.full_name, insights: state.votes[p.id] }));
+  if (answers.length === 0) return;
+
+  const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true;
+  btn.textContent = 'Отправляем…';
+  try {
+    const res = await fetch('/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        telegram_id: u.id || null,
+        username:    u.username || null,
+        first_name:  u.first_name || null,
+        last_name:   u.last_name || null,
+        platform:    (tg && tg.platform) || 'browser',
+        retreat_id:  retreatId,
+        answers,
+        init_data:   (tg && tg.initData) || null,
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || ('HTTP ' + res.status));
+    }
+    state.votes = {};
+    if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    alert('Спасибо! Благодарность отправлена.');
+    go('main-menu');
+  } catch (err) {
+    console.error('submitVotes failed', err);
+    alert('Не удалось отправить: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    updateSendBtn();
+  }
+}
+
+function change(id, inc){
+  const cur = state.votes[id] || 0;
+  const next = Math.max(0, cur + (inc?1:-1));
+  state.votes[id] = next;
+  const el = document.getElementById('cnt-'+id);
+  if(el) el.textContent = next;
+  updateSendBtn();
+}
+
+function updateSendBtn(){
+  const total = Object.values(state.votes).reduce((s,v)=>s+v, 0);
+  const btn = document.getElementById('send-btn');
+  btn.textContent = `Отправить благодарность (${total})`;
+  btn.disabled = total === 0;
+}
+
+loadRetreats();
+loadProfiles();
+loadMe();
+renderKarma();
+</script>
